@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>⚡ PT BMI Executive Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.js"></script>
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.1/package/dist/xlsx.full.min.js"></script>
+    
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --primary: #1F4788;
+            --success: #27AE60;
+            --warning: #F39C12;
+            --danger: #E74C3C;
+            --info: #3498DB;
+            --gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --shadow-lg: 0 10px 30px rgba(0,0,0,0.15);
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f7fa;
+            color: #2c3e50;
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* HEADER */
+        .header {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: var(--gradient);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+
+        .logo {
+            width: 60px;
+            height: 60px;
+            background: var(--gradient);
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            box-shadow: var(--shadow);
+        }
+
+        h1 {
+            font-size: 28px;
+            font-weight: 800;
+            background: var(--gradient);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 5px;
+        }
+
+        .subtitle {
+            font-size: 14px;
+            color: #7f8c8d;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: white;
+            box-shadow: var(--shadow);
+        }
+
+        .btn-primary { background: var(--gradient); }
+        .btn-success { background: var(--success); }
+        .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-lg); }
+
+        /* FILTERS */
+        .filters-section {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .filters-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .filters-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .filter-label {
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            color: #7f8c8d;
+            letter-spacing: 0.5px;
+        }
+
+        .filter-select, .filter-input {
+            padding: 12px 15px;
+            border: 2px solid #e1e8ed;
+            border-radius: 10px;
+            font-size: 14px;
+            background: white;
+            transition: all 0.3s;
+        }
+
+        .filter-select:focus, .filter-input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(31, 71, 136, 0.1);
+            outline: none;
+        }
+
+        /* SECTION TITLE */
+        .section-title {
+            font-size: 22px;
+            font-weight: 800;
+            margin: 35px 0 20px 0;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 5px;
+            height: 30px;
+            background: var(--gradient);
+            border-radius: 3px;
+        }
+
+        /* STATS GRID */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .stat-card {
+            background: white;
+            border-radius: 16px;
+            padding: 25px;
+            box-shadow: var(--shadow-lg);
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+        }
+
+        .stat-card.primary::before { background: var(--gradient); }
+        .stat-card.success::before { background: linear-gradient(135deg, #27AE60 0%, #2ECC71 100%); }
+        .stat-card.warning::before { background: linear-gradient(135deg, #F39C12 0%, #F1C40F 100%); }
+        .stat-card.info::before { background: linear-gradient(135deg, #3498DB 0%, #2980B9 100%); }
+
+        .stat-icon {
+            width: 55px;
+            height: 55px;
+            border-radius: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 26px;
+            opacity: 0.15;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+        }
+
+        .stat-label {
+            font-size: 13px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: #7f8c8d;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 36px;
+            font-weight: 800;
+            color: #2c3e50;
+            margin-bottom: 12px;
+        }
+
+        .stat-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding-top: 15px;
+            border-top: 2px solid #f5f7fa;
+            font-size: 13px;
+            color: #7f8c8d;
+        }
+
+        .stat-change {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .stat-change.positive { background: rgba(39, 174, 96, 0.1); color: var(--success); }
+        .stat-change.negative { background: rgba(231, 76, 60, 0.1); color: var(--danger); }
+        .stat-change.neutral { background: rgba(149, 165, 166, 0.1); color: #95a5a6; }
+
+        /* CHART CARDS */
+        .chart-card {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            margin-bottom: 25px;
+            box-shadow: var(--shadow-lg);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 18px;
+            border-bottom: 2px solid #f5f7fa;
+        }
+
+        .chart-title {
+            font-size: 19px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .chart-badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+        }
+
+        .badge-live {
+            background: rgba(231, 76, 60, 0.15);
+            color: var(--danger);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* TABLE */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        .data-table thead {
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+        }
+
+        .data-table th {
+            padding: 16px;
+            text-align: left;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 11px;
+            border-bottom: 2px solid #dee2e6;
+        }
+
+        .data-table td {
+            padding: 16px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .data-table tbody tr:hover {
+            background: #f8f9fa;
+        }
+
+        /* BADGES */
+        .badge {
+            padding: 6px 12px;
+            border-radius: 15px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            display: inline-block;
+        }
+
+        .badge-lunas { background: rgba(39, 174, 96, 0.15); color: var(--success); }
+        .badge-pending { background: rgba(243, 156, 18, 0.15); color: var(--warning); }
+        .badge-excellent { background: rgba(39, 174, 96, 0.15); color: var(--success); }
+        .badge-good { background: rgba(52, 152, 219, 0.15); color: var(--info); }
+
+        /* STATUS INDICATOR */
+        .status-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 10000;
+            background: white;
+            padding: 12px 20px;
+            border-radius: 25px;
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 13px;
+            font-weight: 600;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .status-connected { background: var(--success); }
+        .status-loading { background: var(--warning); animation: pulse 2s infinite; }
+        .status-error { background: var(--danger); }
+
+        /* LOADING */
+        .loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(102, 126, 234, 0.95);
+            z-index: 99999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .spinner {
+            border: 6px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 6px solid white;
+            width: 70px;
+            height: 70px;
+            animation: spin 1s linear infinite;
+            margin-bottom: 25px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* ALERT */
+        .alert {
+            padding: 18px 22px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            display: flex;
+            gap: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .alert-error {
+            background: rgba(231, 76, 60, 0.1);
+            color: #c0392b;
+            border-left: 4px solid var(--danger);
+        }
+
+        .alert-warning {
+            background: rgba(243, 156, 18, 0.1);
+            color: #d68910;
+            border-left: 4px solid var(--warning);
+        }
+
+        .alert-success {
+            background: rgba(39, 174, 96, 0.1);
+            color: #1e8449;
+            border-left: 4px solid var(--success);
+        }
+
+        /* RESPONSIVE */
+        @media (max-width: 768px) {
+            .container { padding: 15px; }
+            .stats-grid, .filters-grid { grid-template-columns: 1fr; }
+            h1 { font-size: 22px; }
+            .stat-value { font-size: 28px; }
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen -->
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+        <div style="font-size: 20px; font-weight: 700; margin-bottom: 10px;">Loading Dashboard...</div>
+        <div style="font-size: 14px; opacity: 0.9;">Fetching data from Google Sheets...</div>
+    </div>
+
+    <!-- Status Indicator -->
+    <div class="status-indicator">
+        <div class="status-dot status-loading" id="statusDot"></div>
+        <span id="statusText">Connecting...</span>
+    </div>
+
+    <div class="container">
+        <!-- HEADER -->
+        <div class="header">
+            <div class="header-content">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div class="logo">⚡</div>
+                    <div>
+                        <h1>PT BMI Executive Dashboard</h1>
+                        <div class="subtitle">
+                            Real-time Sales Performance & Analytics | 
+                            Records: <strong id="recordCount">0</strong> | 
+                            Last update: <strong id="lastUpdate">-</strong>
+                        </div>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                    <button class="btn btn-success" onclick="exportExcel()">📊 Export Excel</button>
+                    <button class="btn btn-primary" onclick="loadData()">🔄 Refresh</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- ERROR CONTAINER -->
+        <div id="errorContainer"></div>
+
+        <!-- FILTERS -->
+        <div class="filters-section">
+            <div class="filters-title">
+                <span>🔍</span>
+                <span>Advanced Filters</span>
+            </div>
+            <div class="filters-grid">
+                <div class="filter-group">
+                    <label class="filter-label">📅 Period</label>
+                    <select class="filter-select" id="periodFilter" onchange="applyFilters()">
+                        <option value="ALL">All Time</option>
+                        <option value="Q1">Q1 2025</option>
+                        <option value="Q2">Q2 2025</option>
+                        <option value="Q3">Q3 2025</option>
+                        <option value="Q4">Q4 2025</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">👤 AE Individual</label>
+                    <select class="filter-select" id="aeFilter" onchange="applyFilters()">
+                        <option value="ALL">All AEs</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">🏷️ Brand</label>
+                    <select class="filter-select" id="brandFilter" onchange="applyFilters()">
+                        <option value="ALL">All Brands</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">📊 Lead Source</label>
+                    <select class="filter-select" id="sourceFilter" onchange="applyFilters()">
+                        <option value="ALL">All Sources</option>
+                        <option value="PAMERAN">Pameran</option>
+                        <option value="DIGITAL MARKETING">Digital Marketing</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">📋 Status</label>
+                    <select class="filter-select" id="statusFilter" onchange="applyFilters()">
+                        <option value="ALL">All Status</option>
+                        <option value="LUNAS">LUNAS</option>
+                        <option value="ON PROGRESS">ON PROGRESS</option>
+                        <option value="PENDING">PENDING</option>
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label class="filter-label">🔍 Search</label>
+                    <input type="text" class="filter-input" id="searchFilter" placeholder="Search mitra..." oninput="applyFilters()">
+                </div>
+
+                <div class="filter-group" style="align-self: flex-end;">
+                    <button class="btn" style="background: #e74c3c; color: white; width: 100%; justify-content: center;" onclick="clearFilters()">
+                        🗑️ Clear All
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- METRIK UTAMA -->
+        <div class="section-title">
+            <span>📊 Metrik Penjualan Utama</span>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card primary">
+                <div class="stat-icon">📞</div>
+                <div>
+                    <div class="stat-label">Total Meeting</div>
+                    <div class="stat-value" id="totalMeeting">0</div>
+                    <div class="stat-footer">
+                        <span>From <span id="totalData">0</span> data</span>
+                        <span class="stat-change positive" id="meetingConv">
+                            <span>↗</span><span>0%</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-icon">🤝</div>
+                <div>
+                    <div class="stat-label">Total Dealing</div>
+                    <div class="stat-value" id="totalDealing">0</div>
+                    <div class="stat-footer">
+                        <span>Active deals</span>
+                        <span class="stat-change positive">
+                            <span>↗</span><span id="dealingRate">0%</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-icon">💰</div>
+                <div>
+                    <div class="stat-label">Down Payment (DO)</div>
+                    <div class="stat-value" id="totalDO">0</div>
+                    <div class="stat-footer">
+                        <span>From dealing</span>
+                        <span class="stat-change positive" id="doConv">
+                            <span>↗</span><span>0%</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card info">
+                <div class="stat-icon">💵</div>
+                <div>
+                    <div class="stat-label">Total Omset</div>
+                    <div class="stat-value" id="totalOmset">Rp 0</div>
+                    <div class="stat-footer">
+                        <span id="omsetTarget">Target: Rp 0</span>
+                        <span class="stat-change neutral" id="omsetAchieve">
+                            <span>📊</span><span>0%</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-icon">✅</div>
+                <div>
+                    <div class="stat-label">Konversi Dealing → DO</div>
+                    <div class="stat-value" id="convDealingDO">0%</div>
+                    <div class="stat-footer">
+                        <span>Target: 50%</span>
+                        <span class="stat-change neutral" id="convStatus">
+                            <span>📊</span><span>-</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-icon">⏱️</div>
+                <div>
+                    <div class="stat-label">Avg Sales Cycle</div>
+                    <div class="stat-value" id="avgCycle">0d</div>
+                    <div class="stat-footer">
+                        <span>Days to close</span>
+                        <span class="stat-change neutral">
+                            <span>📊</span><span>-</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card info">
+                <div class="stat-icon">💼</div>
+                <div>
+                    <div class="stat-label">Pipeline Value</div>
+                    <div class="stat-value" id="pipelineValue">Rp 0</div>
+                    <div class="stat-footer">
+                        <span id="pipelineCount">0 active</span>
+                        <span class="stat-change positive">
+                            <span>📈</span><span>Active</span>
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card primary">
+                <div class="stat-icon">📊</div>
+                <div>
+                    <div class="stat-label">Avg Deal Size</div>
+                    <div class="stat-value" id="avgDealSize">Rp 0</div>
+                    <div class="stat-footer">
+                        <span>Per closed deal</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- CONVERSION FUNNEL -->
+        <div class="section-title">
+            <span>🔄 Conversion Funnel Analysis</span>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 25px; margin-bottom: 25px;">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <span>🎯</span>
+                        <span>Overall Funnel</span>
+                    </div>
+                    <span class="chart-badge badge-live">● LIVE</span>
+                </div>
+                <canvas id="funnelAllChart" height="300"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <span>🏢</span>
+                        <span>Pameran Funnel</span>
+                    </div>
+                    <span class="chart-badge" style="background: rgba(52, 152, 219, 0.15); color: #3498DB;">PAMERAN</span>
+                </div>
+                <canvas id="funnelPameranChart" height="300"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <span>📱</span>
+                        <span>Digital Marketing Funnel</span>
+                    </div>
+                    <span class="chart-badge" style="background: rgba(155, 89, 182, 0.15); color: #9B59B6;">DIGITAL</span>
+                </div>
+                <canvas id="funnelDigitalChart" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- PERFORMA TIM -->
+        <div class="section-title">
+            <span>👥 Performa Tim & Individual</span>
+        </div>
+
+        <div class="chart-card">
+            <div class="chart-header">
+                <div class="chart-title">
+                    <span>🏆</span>
+                    <span>AE Leaderboard</span>
+                </div>
+                <select class="filter-select" style="padding: 8px 15px;" id="leaderboardSort" onchange="renderLeaderboard()">
+                    <option value="CLOSING">Sort by Closing</option>
+                    <option value="MEETING">Sort by Meeting</option>
+                    <option value="WIN_RATE">Sort by Win Rate</option>
+                </select>
+            </div>
+            <div style="overflow-x: auto;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Rank</th>
+                            <th>AE Name</th>
+                            <th>Closed</th>
+                            <th>Total Deals</th>
+                            <th>Win Rate</th>
+                            <th>Omset</th>
+                            <th>Avg Deal</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leaderboardTable">
+                        <tr>
+                            <td colspan="8" style="text-align: center; padding: 40px;">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- WIN RATE CHARTS -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(500px, 1fr)); gap: 25px; margin-top: 25px;">
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <span>📊</span>
+                        <span>Win Rate by AE</span>
+                    </div>
+                </div>
+                <canvas id="winRateAEChart" height="300"></canvas>
+            </div>
+
+            <div class="chart-card">
+                <div class="chart-header">
+                    <div class="chart-title">
+                        <span>🏷️</span>
+                        <span>Win Rate by Brand</span>
+                    </div>
+                </div>
+                <canvas id="winRateBrandChart" height="300"></canvas>
+            </div>
+        </div>
+
+        <!-- ALERTS -->
+        <div class="section-title">
+            <span>🚨 Alerts & Action Items</span>
+        </div>
+
+        <div id="alertsContainer"></div>
+
+        <!-- FOOTER -->
+        <div style="text-align: center; padding: 40px 20px; color: #7f8c8d;">
+            <p style="font-size: 14px; margin-bottom: 10px;">
+                <strong>PT BMI Executive Dashboard</strong> | Real-time Sales Analytics
+            </p>
+            <p style="font-size: 12px;">
+                Auto-refresh every 5 minutes | Data from Google Sheets | v2.0
+            </p>
+        </div>
+    </div>
+
+    <script>
+        // ═══════════════════════════════════════════════════════════════════
+        // 🔧 CONFIGURATION
+        // ═══════════════════════════════════════════════════════════════════
+        
+        const CONFIG = {
+            SCRIPT_URL: 'https://script.google.com/macros/s/AKfycbxO8G7b1Wn196WvarmHl5cXj_FVCwQrRejrfJUhwe-aECBjCN4e9NeK95IXQo6TOQ9S/exec',
+            AUTO_REFRESH_MINUTES: 5
+        };
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // 📊 GLOBAL VARIABLES
+        // ═══════════════════════════════════════════════════════════════════
+
+        let allData = {
+            database: [],
+            omset: [],
+            weekly: [],
+            ae2025: []
+        };
+        let filteredData = [];
+        let charts = {};
+
+        // ═══════════════════════════════════════════════════════════════════
+        // 🚀 INITIALIZATION
+        // ═══════════════════════════════════════════════════════════════════
+
+        document.addEventListener('DOMContentLoaded', async function() {
+            console.log('🚀 Dashboard initializing...');
+            
+            if (!CONFIG.SCRIPT_URL || CONFIG.SCRIPT_URL === 'PASTE_YOUR_APPS_SCRIPT_URL_HERE') {
+                hideLoading();
+                showError('⚠️ Configuration Required', 
+                    'Please edit the HTML file and paste your Google Apps Script URL in CONFIG.SCRIPT_URL (line ~363).');
+                return;
+            }
+
+            await loadData();
+            setInterval(() => loadData(true), CONFIG.AUTO_REFRESH_MINUTES * 60 * 1000);
+            setInterval(updateTime, 60000);
+            updateTime();
+        });
+
+        // ═══════════════════════════════════════════════════════════════════
+        // 📡 DATA LOADING
+        // ═══════════════════════════════════════════════════════════════════
+
+        async function loadData(silent = false) {
+            if (!silent) updateStatus('loading', 'Loading...');
+
+            try {
+                console.log('📡 Fetching from:', CONFIG.SCRIPT_URL);
+                const response = await fetch(CONFIG.SCRIPT_URL);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const result = await response.json();
+                console.log('✅ Response:', result);
+
+                if (!result.success) {
+                    throw new Error(result.error || 'Failed to load data');
+                }
+
+                allData = result.data;
+                console.log('✅ Loaded:', {
+                    database: allData.database.length,
+                    omset: allData.omset.length,
+                    weekly: allData.weekly.length,
+                    ae2025: allData.ae2025.length
+                });
+                
+                updateStatus('connected', `Connected ✓ (${allData.database.length} records)`);
+                
+                populateFilters();
+                filteredData = allData.database;
+                renderDashboard();
+                hideLoading();
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                updateStatus('error', 'Connection Failed');
+                if (!silent) {
+                    showError('❌ Failed to load data', error.message);
+                }
+                hideLoading();
+            }
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // 🎨 RENDER DASHBOARD
+        // ═══════════════════════════════════════════════════════════════════
+
+        function renderDashboard() {
+            console.log('🎨 Rendering with', filteredData.length, 'records');
+            
+            calculateMetrics();
+            renderLeaderboard();
+            renderCharts();
+            renderAlerts();
+        }
+
+        function calculateMetrics() {
+            const data = filteredData;
+            const omset = allData.omset || [];
+
+            // Basic counts
+            document.getElementById('recordCount').textContent = allData.database.length.toLocaleString();
+            document.getElementById('totalData').textContent = data.length.toLocaleString();
+            
+            const totalDealing = data.filter(r => ['LUNAS', 'ON PROGRESS', 'PENDING'].includes(r['STATUS DEALING'])).length;
+            const totalLunas = data.filter(r => r['STATUS DEALING'] === 'LUNAS').length;
+            const totalDO = totalLunas;
+            
+            document.getElementById('totalDealing').textContent = totalDealing.toLocaleString();
+            document.getElementById('totalDO').textContent = totalDO.toLocaleString();
+            
+            // Meeting from OMSET sheet
+            const totalMeetingFromOmset = omset.reduce((sum, row) => {
+                const val = parseFloat(row['QTY MEETING']) || 0;
+                return sum + val;
+            }, 0);
+            document.getElementById('totalMeeting').textContent = Math.round(totalMeetingFromOmset).toLocaleString();
+            
+            // Conversions
+            const meetingConv = data.length > 0 && totalMeetingFromOmset > 0 ? 
+                ((data.length / totalMeetingFromOmset) * 100).toFixed(1) : 0;
+            const doConvRate = totalDealing > 0 ? ((totalDO / totalDealing) * 100).toFixed(1) : 0;
+            
+            document.getElementById('meetingConv').innerHTML = `<span>↗</span><span>${meetingConv}%</span>`;
+            document.getElementById('doConv').innerHTML = `<span>↗</span><span>${doConvRate}%</span>`;
+            document.getElementById('convDealingDO').textContent = doConvRate + '%';
+            document.getElementById('dealingRate').textContent = ((totalDealing / data.length * 100) || 0).toFixed(1) + '%';
+            
+            // Conversion status
+            const convElement = document.getElementById('convStatus');
+            if (doConvRate >= 50) {
+                convElement.className = 'stat-change positive';
+                convElement.innerHTML = '<span>✅</span><span>Above target</span>';
+            } else if (doConvRate >= 40) {
+                convElement.className = 'stat-change neutral';
+                convElement.innerHTML = '<span>📊</span><span>Near target</span>';
+            } else {
+                convElement.className = 'stat-change negative';
+                convElement.innerHTML = '<span>⚠️</span><span>Below target</span>';
+            }
+            
+            // Omset calculation
+            let totalOmsetValue = 0;
+            data.forEach(record => {
+                if (record['STATUS DEALING'] === 'LUNAS') {
+                    const omsetVal = parseFloat(record['OMSET']) || 0;
+                    totalOmsetValue += omsetVal;
+                }
+            });
+            
+            document.getElementById('totalOmset').textContent = 'Rp ' + (totalOmsetValue / 1000000).toFixed(1) + 'M';
+            
+            // Target from OMSET sheet
+            let totalTarget = 0;
+            omset.forEach(row => {
+                const target = parseFloat(row['TARGET\n(RUMUS)']) || parseFloat(row['TARGET']) || 0;
+                totalTarget += target;
+            });
+            
+            document.getElementById('omsetTarget').textContent = 'Target: Rp ' + (totalTarget / 1000000).toFixed(0) + 'M';
+            
+            const achieveRate = totalTarget > 0 ? ((totalOmsetValue / totalTarget) * 100).toFixed(1) : 0;
+            const achieveElement = document.getElementById('omsetAchieve');
+            achieveElement.innerHTML = `<span>📊</span><span>${achieveRate}%</span>`;
+            if (achieveRate >= 100) achieveElement.className = 'stat-change positive';
+            else if (achieveRate >= 80) achieveElement.className = 'stat-change neutral';
+            else achieveElement.className = 'stat-change negative';
+            
+            // Avg Deal Size
+            const avgDeal = totalLunas > 0 ? (totalOmsetValue / totalLunas) : 0;
+            document.getElementById('avgDealSize').textContent = 'Rp ' + (avgDeal / 1000000).toFixed(1) + 'M';
+            
+            // Sales Cycle
+            let totalCycle = 0;
+            let cycleCount = 0;
+            data.forEach(record => {
+                const lag = parseFloat(record['LAG_DATA_TO_DEALING']) || 0;
+                if (lag > 0) {
+                    totalCycle += lag;
+                    cycleCount++;
+                }
+            });
+            const avgCycleValue = cycleCount > 0 ? Math.round(totalCycle / cycleCount) : 0;
+            document.getElementById('avgCycle').textContent = avgCycleValue + 'd';
+            
+            // Pipeline
+            const pipeline = data.filter(r => ['ON PROGRESS', 'PENDING'].includes(r['STATUS DEALING']));
+            let pipelineValue = 0;
+            pipeline.forEach(r => {
+                const val = parseFloat(r['TARGET OMSET']) || parseFloat(r['OMSET']) || 0;
+                pipelineValue += val;
+            });
+            document.getElementById('pipelineValue').textContent = 'Rp ' + (pipelineValue / 1000000).toFixed(1) + 'M';
+            document.getElementById('pipelineCount').textContent = pipeline.length + ' active';
+        }
+
+        function renderLeaderboard() {
+            const aeStats = {};
+            
+            filteredData.forEach(record => {
+                const ae = record['BISNIS MENTOR'] || 'Unknown';
+                if (!aeStats[ae]) {
+                    aeStats[ae] = { name: ae, totalDeals: 0, closedDeals: 0, omset: 0 };
+                }
+                
+                aeStats[ae].totalDeals++;
+                if (record['STATUS DEALING'] === 'LUNAS') {
+                    aeStats[ae].closedDeals++;
+                    aeStats[ae].omset += parseFloat(record['OMSET']) || 0;
+                }
+            });
+            
+            const sortBy = document.getElementById('leaderboardSort')?.value || 'CLOSING';
+            let aeArray = Object.values(aeStats);
+            
+            if (sortBy === 'CLOSING') {
+                aeArray.sort((a, b) => b.closedDeals - a.closedDeals);
+            } else if (sortBy === 'WIN_RATE') {
+                aeArray.sort((a, b) => (b.closedDeals/b.totalDeals) - (a.closedDeals/a.totalDeals));
+            }
+            
+            const tbody = document.getElementById('leaderboardTable');
+            if (aeArray.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="8" style="text-align: center; padding: 40px;">No data</td></tr>';
+                return;
+            }
+            
+            tbody.innerHTML = aeArray.map((ae, i) => {
+                const winRate = ae.totalDeals > 0 ? ((ae.closedDeals / ae.totalDeals) * 100).toFixed(1) : 0;
+                const avgDeal = ae.closedDeals > 0 ? (ae.omset / ae.closedDeals / 1000000).toFixed(1) : 0;
+                
+                let rank = i + 1;
+                if (i === 0) rank = '🥇';
+                else if (i === 1) rank = '🥈';
+                else if (i === 2) rank = '🥉';
+                
+                let statusBadge = 'badge-good';
+                let statusText = 'GOOD';
+                if (winRate >= 40) {
+                    statusBadge = 'badge-excellent';
+                    statusText = 'EXCELLENT';
+                }
+                
+                return `
+                    <tr>
+                        <td style="font-size: 20px; text-align: center;">${rank}</td>
+                        <td><strong>${ae.name}</strong></td>
+                        <td><strong>${ae.closedDeals}</strong></td>
+                        <td>${ae.totalDeals}</td>
+                        <td><strong>${winRate}%</strong></td>
+                        <td>Rp ${(ae.omset / 1000000).toFixed(1)}M</td>
+                        <td>Rp ${avgDeal}M</td>
+                        <td><span class="badge ${statusBadge}">${statusText}</span></td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderCharts() {
+            Object.values(charts).forEach(c => c?.destroy());
+            charts = {};
+            
+            createFunnelChart('funnelAllChart', 'All', filteredData);
+            createFunnelChart('funnelPameranChart', 'Pameran', filteredData.filter(r => r['FUNNEL_SOURCE'] === 'PAMERAN'));
+            createFunnelChart('funnelDigitalChart', 'Digital', filteredData.filter(r => r['FUNNEL_SOURCE'] === 'DIGITAL MARKETING'));
+            
+            createWinRateCharts();
+        }
+
+        function createFunnelChart(canvasId, title, data) {
+            const ctx = document.getElementById(canvasId);
+            if (!ctx) return;
+            
+            const totalData = data.length;
+            const meetings = Math.round(totalData * 0.15);
+            const dealing = data.filter(r => ['LUNAS', 'ON PROGRESS', 'PENDING'].includes(r['STATUS DEALING'])).length;
+            const doDeal = data.filter(r => r['STATUS DEALING'] === 'LUNAS').length;
+            
+            charts[canvasId] = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Data', 'Meeting', 'Dealing', 'DO', 'Lunas'],
+                    datasets: [{
+                        label: 'Count',
+                        data: [totalData, meetings, dealing, doDeal, doDeal],
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(108, 92, 231, 0.8)',
+                            'rgba(155, 89, 182, 0.8)',
+                            'rgba(52, 152, 219, 0.8)',
+                            'rgba(39, 174, 96, 0.8)'
+                        ]
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } }
+                }
+            });
+        }
+
+        function createWinRateCharts() {
+            const aeWinRates = {};
+            filteredData.forEach(r => {
+                const ae = r['BISNIS MENTOR'] || 'Unknown';
+                if (!aeWinRates[ae]) aeWinRates[ae] = { total: 0, closed: 0 };
+                aeWinRates[ae].total++;
+                if (r['STATUS DEALING'] === 'LUNAS') aeWinRates[ae].closed++;
+            });
+            
+            const topAEs = Object.entries(aeWinRates)
+                .map(([name, s]) => ({ name, rate: (s.closed / s.total * 100).toFixed(1) }))
+                .sort((a, b) => b.rate - a.rate).slice(0, 10);
+            
+            const ctx = document.getElementById('winRateAEChart');
+            if (ctx) {
+                charts['winRateAE'] = new Chart(ctx, {
+                    type: 'bar',
+                    data: {
+                        labels: topAEs.map(a => a.name),
+                        datasets: [{
+                            label: 'Win Rate (%)',
+                            data: topAEs.map(a => a.rate),
+                            backgroundColor: 'rgba(39, 174, 96, 0.8)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+            
+            const brandWinRates = {};
+            filteredData.forEach(r => {
+                const brand = r['BRAND DEALING'] || 'Unknown';
+                if (!brandWinRates[brand]) brandWinRates[brand] = { total: 0, closed: 0 };
+                brandWinRates[brand].total++;
+                if (r['STATUS DEALING'] === 'LUNAS') brandWinRates[brand].closed++;
+            });
+            
+            const topBrands = Object.entries(brandWinRates)
+                .map(([name, s]) => ({ name, rate: (s.closed / s.total * 100).toFixed(1) }))
+                .sort((a, b) => b.rate - a.rate).slice(0, 8);
+            
+            const ctxBrand = document.getElementById('winRateBrandChart');
+            if (ctxBrand) {
+                charts['winRateBrand'] = new Chart(ctxBrand, {
+                    type: 'bar',
+                    data: {
+                        labels: topBrands.map(b => b.name),
+                        datasets: [{
+                            label: 'Win Rate (%)',
+                            data: topBrands.map(b => b.rate),
+                            backgroundColor: 'rgba(52, 152, 219, 0.8)'
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } }
+                    }
+                });
+            }
+        }
+
+        function renderAlerts() {
+            const alerts = [];
+            const pendingCount = filteredData.filter(r => r['STATUS DEALING'] === 'PENDING').length;
+            
+            if (pendingCount > 20) {
+                alerts.push({
+                    type: 'warning',
+                    icon: '⚠️',
+                    title: `${pendingCount} Pending Deals`,
+                    text: 'High volume of pending deals. Follow-up recommended.'
+                });
+            }
+            
+            const totalDealing = filteredData.filter(r => ['LUNAS', 'ON PROGRESS', 'PENDING'].includes(r['STATUS DEALING'])).length;
+            const totalLunas = filteredData.filter(r => r['STATUS DEALING'] === 'LUNAS').length;
+            const convRate = totalDealing > 0 ? (totalLunas / totalDealing * 100) : 0;
+            
+            if (convRate < 30) {
+                alerts.push({
+                    type: 'error',
+                    icon: '🔴',
+                    title: 'Low Conversion Alert',
+                    text: `Conversion rate ${convRate.toFixed(1)}% below target of 50%.`
+                });
+            }
+            
+            if (alerts.length === 0) {
+                alerts.push({
+                    type: 'success',
+                    icon: '✅',
+                    title: 'All Systems Operational',
+                    text: 'No critical alerts. Performance within acceptable ranges.'
+                });
+            }
+            
+            document.getElementById('alertsContainer').innerHTML = alerts.map(a => `
+                <div class="alert alert-${a.type}">
+                    <div style="font-size: 24px;">${a.icon}</div>
+                    <div>
+                        <div style="font-weight: 700; margin-bottom: 5px;">${a.title}</div>
+                        <div style="font-size: 13px;">${a.text}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // 🎛️ FILTERS
+        // ═══════════════════════════════════════════════════════════════════
+
+        function populateFilters() {
+            const aes = [...new Set(allData.database.map(r => r['BISNIS MENTOR']).filter(Boolean))].sort();
+            document.getElementById('aeFilter').innerHTML = '<option value="ALL">All AEs</option>' + 
+                aes.map(ae => `<option value="${ae}">${ae}</option>`).join('');
+            
+            const brands = [...new Set(allData.database.map(r => r['BRAND DEALING']).filter(Boolean))].sort();
+            document.getElementById('brandFilter').innerHTML = '<option value="ALL">All Brands</option>' + 
+                brands.map(b => `<option value="${b}">${b}</option>`).join('');
+        }
+
+        function applyFilters() {
+            let data = [...allData.database];
+            
+            const ae = document.getElementById('aeFilter').value;
+            if (ae !== 'ALL') data = data.filter(r => r['BISNIS MENTOR'] === ae);
+            
+            const brand = document.getElementById('brandFilter').value;
+            if (brand !== 'ALL') data = data.filter(r => r['BRAND DEALING'] === brand);
+            
+            const source = document.getElementById('sourceFilter').value;
+            if (source !== 'ALL') data = data.filter(r => r['FUNNEL_SOURCE'] === source);
+            
+            const status = document.getElementById('statusFilter').value;
+            if (status !== 'ALL') data = data.filter(r => r['STATUS DEALING'] === status);
+            
+            const search = document.getElementById('searchFilter').value.toLowerCase();
+            if (search) data = data.filter(r => (r['MITRA'] || '').toLowerCase().includes(search));
+            
+            filteredData = data;
+            renderDashboard();
+        }
+
+        function clearFilters() {
+            document.getElementById('periodFilter').value = 'ALL';
+            document.getElementById('aeFilter').value = 'ALL';
+            document.getElementById('brandFilter').value = 'ALL';
+            document.getElementById('sourceFilter').value = 'ALL';
+            document.getElementById('statusFilter').value = 'ALL';
+            document.getElementById('searchFilter').value = '';
+            filteredData = allData.database;
+            renderDashboard();
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // 📤 EXPORT
+        // ═══════════════════════════════════════════════════════════════════
+
+        function exportExcel() {
+            if (!filteredData || filteredData.length === 0) {
+                alert('No data to export');
+                return;
+            }
+
+            const ws = XLSX.utils.json_to_sheet(filteredData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Data");
+            XLSX.writeFile(wb, `PT_BMI_Dashboard_${new Date().toISOString().split('T')[0]}.xlsx`);
+        }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // 🛠️ UTILITIES
+        // ═══════════════════════════════════════════════════════════════════
+
+        function updateStatus(status, text) {
+            document.getElementById('statusDot').className = `status-dot status-${status}`;
+            document.getElementById('statusText').textContent = text;
+        }
+
+        function updateTime() {
+            document.getElementById('lastUpdate').textContent = 
+                new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
+        }
+
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showError(title, message) {
+            document.getElementById('errorContainer').innerHTML = `
+                <div class="alert alert-error">
+                    <div style="font-size: 24px;">❌</div>
+                    <div>
+                        <div style="font-weight: 700; margin-bottom: 5px;">${title}</div>
+                        <div style="font-size: 13px;">${message}</div>
+                    </div>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>
