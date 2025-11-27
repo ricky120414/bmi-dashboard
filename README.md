@@ -1,2 +1,2 @@
-# bmi-dashboard
+# champion-dashboard
 PT BMI Executive Dashboard
